@@ -1,0 +1,59 @@
+storage: /storage
+capacities: # in MB
+  memory-cap: 1024
+  storage-cap: 112640
+threads:
+  memory: 8
+  storage: 4
+  routing: 64
+  benchmark: 64
+bench_config:
+  num-benchmark-nodes: 8
+kvs_config:
+  value-size: 1006
+  shortcut-size: 16
+  log-block-size: 8 # in MB
+  log-cache-len: 1
+  log-block-prealloc-num: 2
+replication:
+  memory: 1
+  storage: 0
+  minimum: 1
+  local: 1
+policy:
+  reconfiguration: false
+  elasticity: false
+  selective-rep: false
+  tiering: false
+  batching: true
+  batchingthreshold: 5000
+  caching: true
+  adaptive-caching: true
+  weight-or-vratio: 5
+  latencythreshold: 16000 #avg: 1200 tail: 16000
+  using_avg_latency: false
+  perf-monitoring: true
+  grace-period: 90 #60, 90
+  timeout: 500
+  server-report-period: 5 #2,5
+  server-key-monitor-period: 20 #8,20
+  policy-decision-period: 10 #4,10
+net_config:
+  request_puller_hwm: 1000
+  request_puller_backlog: 100
+  response_puller_hwm: 0
+  response_puller_backlog: 100
+ib_config:
+  total_available_memory_nodes: 16
+  num_initial_memory_nodes: 4
+  num_initial_storage_nodes: 1
+  threads_per_memory: 8
+  threads_per_storage: 4
+  num_storage_managers: 1
+  msg_size: 4194304
+  storage_node_ips:
+    - 10.52.0.29
+  clover_memc_ips:
+    - 10.52.0.29
+  sock_port: 1
+  rank: NODE_UID

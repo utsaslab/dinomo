@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: monitoring-pod
+  labels:
+    role: monitoring
+spec:
+  containers:
+  - name: monitoring-container
+    image: sekwonlee/dinomo:kvs
+    imagePullPolicy: Always
+    env:
+    - name: SERVER_TYPE
+      value: mn
+    - name: MGMT_IP
+      value: MGMT_IP_DUMMY
+    - name: REPO_ORG
+      value: sekwonlee
+    - name: REPO_BRANCH
+      value: master
+  imagePullSecrets:
+  - name: regcred
+  nodeSelector:
+    role: general

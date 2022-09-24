@@ -1,0 +1,317 @@
+//  Copyright 2019 U.C. Berkeley RISE Lab
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+syntax = "proto3";
+
+import "shared.proto";
+
+// An enum representing whether a function should be executed a single time
+// after all triggers are received or once per trigger received.
+enum ExecutionType {
+  // Signifies that a function should be executed only once.
+  REGULAR = 0;
+
+  // Indicates that a function should be executed once per trigger received and
+  // requeued if an invalid output is detected.
+  MULTIEXEC = 1;
+}
+
+// An enum representing the different types of serializers used primarily for
+// Python values.
+enum SerializerType {
+  // The default serializer type, which is cloudpickle.
+  DEFAULT = 0;
+
+  // The numpy serializer uses PyArrow for maximum efficiency.
+  NUMPY = 1;
+
+  // A serializer to manage UTF-8 strings.
+  STRING = 2;
+}
+
+// The error type returned by an executor or scheduler for an individual request.
+enum CloudburstError {
+  // This request did not generate an error.
+  NO_CLOUDBURST_ERROR = 0;
+
+  // The requested function was not stored in the KVS. This might occasionally
+  // occur because of the eventual nature of the KVS.
+  FUNC_NOT_FOUND = 1;
+
+  // The function that an executor was requested to execute is not pinned at
+  // that executor.
+  NOT_PINNED = 2;
+
+  // The user code threw an error while executing.
+  EXECUTION_ERROR = 3;
+
+  // The DAG for which the request was made does not exist.
+  NO_SUCH_DAG = 4;
+
+  // There are no available resources on which we can deploy this request. This
+  // should occur rarely, if ever, and should automatically resolve itself via
+  // autoscaling decisions.
+  NO_RESOURCES = 5;
+
+  // The DAG attempting to be created already exists.
+  DAG_ALREADY_EXISTS = 6;
+}
+
+// The consistency mode to be used with an individual request.
+enum ConsistencyType {
+  // Normal consistency means that any non-causal lattice types are supported
+  // -- sets, last writer wins, etc.
+  NORMAL = 0;
+
+  // Single-key causal mode is supported (see Anna KVS definitions for more
+  // detail).
+  SINGLE = 1;
+
+  // Multi-key causal more is supported (see Anna KVS definitions for more
+  // detail).
+  MULTI = 2;
+}
+
+// A message representing an individual, serialized Python function.
+message Function {
+  // The name of this function.
+  string name = 1;
+
+  // The serialized representation of this function.
+  bytes body = 2;
+}
+
+// Any arbitrary value that is being moved through the system -- can be used to
+// represent function arguments, return values, etc.
+message Value {
+  // The serialized version of the data.
+  bytes body = 1;
+
+  // The serializer used to create the body; if none is specified, the enum
+  // uses DEFAULT.
+  SerializerType type = 2;
+}
+
+// A request to execute a pre-registered function a single time.
+message FunctionCall {
+  // The name of the fucntion to execute.
+  string name = 1;
+
+  // A unique ID used to match asynchronous requests to responses.
+  uint32 request_id = 2;
+
+  // The arguments to be passed into the function.
+  Arguments arguments = 3;
+
+  // An optional field that allows the user to specify where the server should
+  // store the result of the request. If none is specified, one is
+  // automatically generated and returned to the user.
+  string response_key = 4;
+
+  // Specify what consistency mode this function should be executed in.
+  ConsistencyType consistency = 5;
+}
+
+// A serialized representation of a Cloudburst DAG, which consists of a set of
+// functions and links between pairs of functions.
+message Dag {
+  // A representation of a link between a specific pair of functions in the
+  // DAG. Requests always move from sources to sinks.
+  message Link {
+    // The source (origin) of the link.
+    string source = 1;
+
+    // The sink (destination) of the link.
+    string sink = 2;
+  }
+
+  // A reference to a function to be executed in this DAG.
+  message FunctionReference {
+    // The name of the function.
+    string name = 1;
+
+    // The type of the function execution (see ExecutionType enum).
+    ExecutionType type = 2;
+
+    // What outputs are considered invalid for this function execution.
+    repeated bytes invalid_results = 3;
+
+    // Whether this function needs a GPU or not.
+    bool gpu = 4;
+
+    // Whether this function supports batching or not1
+    bool batching = 5;
+  }
+
+  // A unique name used to refer to this DAG.
+  string name = 1;
+
+  // The set of functions executed as a part of this DAG.
+  repeated FunctionReference functions = 2;
+
+  // The set of links between the functions that comprise this DAG. There are
+  // two currently unenforced integrity constraints:
+  // (1) Every function must be connected to at least one other function
+  // (2) The DAG can have potentially many sources but at most one sink
+  repeated Link connections = 3;
+
+  // A list of the all the functions that the scheduler should attempt to
+  // colocate. Colocation is best effort, and DAG creation will still succeed
+  // even if colocation fails.
+  repeated string colocated = 4;
+}
+
+// A list of Values that represents the arguments for a particular function
+// call.
+message Arguments {
+  // The set of arguments.
+  repeated Value values = 1;
+}
+
+// A request for a single execution of a previously registered DAG of
+// functions.
+message DagCall {
+  // The name of the DAG to be executed.
+  string name = 1;
+
+  // A per-function list of arguments that are fixed at execution time.
+  // Arguments that are derived from upstream function calls are automatically
+  // populated by the runtime.
+  map<string, Arguments> function_args = 2;
+
+  // The address to which results should be sent. If none is specified, then
+  // thre result is automatically stored in the KVS at a key generated by the
+  // scheduler.
+  string response_address = 3;
+
+  // The consistency mode in which this request is being executed; if none is
+  // specified, this will default to the NORMAL mode.
+  ConsistencyType consistency = 4;
+
+  // The output_key at which the result of this DAG should be stored.
+  string output_key = 5;
+
+  // A logical unique ID associated with the requesting client. This can
+  // persist across requests and is used for causal metadata.
+  string client_id = 6;
+
+  // The name of the DAG to continue this request with.
+  Continuation continuation = 7;
+}
+
+// A message used to respond to most kinds of user requests.
+message GenericResponse {
+  // Captures whether or not the request succeeded.
+  bool success = 1;
+
+  // If the request was successful and has a KVS key associated with it, the
+  // key will be stored in this field.
+  string response_id = 2;
+
+  // An optional field to inform the user what the error was if the request was
+  // not successful.
+  CloudburstError error = 3;
+}
+
+message Continuation {
+  // The name of the DAG to invoke.
+  string name = 1;
+
+  // The ID of the original request.
+  string id = 2;
+
+  // The result of the previous DAG that is used as the input for the next
+  // DAG.
+  bytes result = 3;
+
+  // The DAGCall for the second part of the continuation.
+  DagCall call = 4;
+}
+
+// A message representing a generated schedule for an individual DAG execution
+// request.
+message DagSchedule {
+  // A UUID associated with this execution.
+  string id = 1;
+
+  // The actual DAG that we are executing.
+  Dag dag = 2;
+
+  // The function in the DAG the receiver is responsible for executing.
+  string target_function = 3;
+
+  // The consistency mode used to execute this DAG; if none is specified, the
+  // default is NORMAL.
+  ConsistencyType consistency = 4;
+
+  // The list of upstream triggers that should be received by this executor
+  // before executing its function. This is equivalent to the set of functions
+  // which are upstream from this particular function.
+  repeated string triggers = 5;
+
+  // The mappings from function names to IP-port pairs (representing executors)
+  // in this schedule. This is used by each executor to send downstream
+  // triggers.
+  map<string, string> locations = 6;
+
+  // The pre-fixed arguments for each stage, which are specified in the
+  // DAGCall. Arguments depending on upstream functions are automatically
+  // resolved by the runtime.
+  map<string, Arguments> arguments = 7;
+
+  // An optional field with an IP-port pair where the client is listening for
+  // results; if this field is empty, the result is put into the KVS.
+  string response_address = 8;
+
+  // The output key at which the result of this DAG will be stored upon
+  // completion.
+  string output_key = 9;
+
+  // A logical unique ID associated with the requesting client. This can
+  // persist across requests and is used for causal metadata.
+  string client_id = 10;
+
+  // Assigns a timestamp to this schedule based on when it first came into the
+  // system -- this is used to calculate end-to-end latency.
+  double start_time = 11;
+
+  // The continuation for this schedule to return to the scheduler with.
+  Continuation continuation = 12;
+}
+
+// A trigger that enables a downstream executor to begin running a function
+// that it is responsible for.
+message DagTrigger {
+  // The unique ID of this DAG execution, which is propgated in a DAGSchedule.
+  string id = 1;
+
+  // The name of the function this trigger is intended for.
+  string target_function = 2;
+
+  // The name of the function from which this trigger is being sent.
+  string source = 3;
+
+  // Arguments for this downstream function that were generated by the upstream
+  // function's output.
+  Arguments arguments = 4;
+
+  // If this function depends on an upstream executor to cache a particular
+  // KeyVersion for a consistency guarantee, this map tracks which IP addresses
+  // are responsible for each key.
+  map<string, KeyVersionList> version_locations = 5;
+
+  // The list of causal dependencies that have been accumulated until this
+  // point in this DAG execution.
+  repeated KeyVersion dependencies = 6;
+}

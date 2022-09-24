@@ -1,0 +1,97 @@
+//  Copyright 2019 U.C. Berkeley RISE Lab
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+syntax = "proto3";
+
+import "anna.proto";
+import "cloudburst.proto";
+import "shared.proto";
+
+// A message representing an individual tuple when the system is operating in
+// causal mode.
+message CausalTuple {
+  // The name of the key-value pair this tuple represents.
+  string key = 1;
+
+  // The serialized payload of this key-value pair.
+  bytes payload = 2;
+
+  // Any errors generated while retrieving this tuple (see CausalError).
+  AnnaError error = 3;
+}
+
+// A request for one or more causal tuples, made from an executor and answered
+// by a cache.
+message CausalRequest {
+  // The consistency mode that the request is being run in -- this should only
+  // be SINGLE or MULTI.
+  ConsistencyType consistency = 1;
+
+  // The unique ID of the client that is making this request -- this may be
+  // independent from the physical node on which the request is running.
+  string id = 2;
+
+  // The set of CausalTuples which are being requested from the cache.
+  repeated CausalTuple tuples = 3;
+
+  // The set of keys that will be read by downstream function executors.
+  repeated string future_read_set = 4;
+
+  // The locations of upstream caches at which particular key versions are
+  // stored -- this is used to optimize version retrieval.
+  map<string, KeyVersionList> key_version_locations = 5;
+
+  // The address at which the client will be waiting for a response for this
+  // particular request.
+  string response_address = 6;
+}
+
+// A response to a particular CausalRequest.
+message CausalResponse {
+  // The CausalTuples that respond to an individual request. These form a
+  // 1-to-1 mapping with the CausalTuples in the corresponding CausalRequest.
+  repeated CausalTuple tuples = 1;
+
+  // The address of the cache that serviced this request -- this used to
+  // propagate causal metadata to downstream executors.
+  string key_version_query_address = 2;
+
+  // The set of keys relevant to this DAG that are being cached at the above
+  // address to service queries by downstream caches.
+  repeated KeyVersion key_versions = 3;
+}
+
+// A request that is passed from one cache to another to retrieve a specific
+// version of a particular key. The key versions are tracked by the request ID
+// that they are associated with.
+message KeyVersionRequest {
+  // The request ID for which we are retrieving key versions.
+  string id = 1;
+
+  // The IP port pair that will receive the asynchronous response.
+  string response_address = 2;
+
+  // The list of keys that we are requesting.
+  repeated string keys = 3;
+}
+
+// A response to a partticular KeyVersionRequest.
+message KeyVersionResponse {
+  // The ID of the request for which this response is inteded.
+  string id = 1;
+
+  // The list of CausalTuples that was requested. This is a 1-to-1 mapping with
+  // the keys field in the KeyVersionRequest.
+  repeated CausalTuple tuples = 2;
+}
