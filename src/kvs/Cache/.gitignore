@@ -1,7 +1,0 @@
-*.o
-tags
-cscope.*
-*.txt
-*.so
-memcached_local
-memcached_server
