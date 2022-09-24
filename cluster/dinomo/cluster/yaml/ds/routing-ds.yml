@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: routing-nodes
+  labels:
+    role: routing
+spec:
+  selector:
+    matchLabels:
+      role: routing
+  template:
+    metadata:
+      labels:
+        role: routing
+    spec:
+      nodeSelector:
+        role: routing
+      hostNetwork: true
+      containers:
+      - name: routing-container
+        image: sekwonlee/dinomo:kvs
+        imagePullPolicy: Always
+        env:
+        - name: SERVER_TYPE
+          value: r
+        - name: MON_IPS
+          value: MON_IPS_DUMMY
+        - name: REPO_ORG
+          value: sekwonlee
+        - name: REPO_BRANCH
+          value: master
+      imagePullSecrets:
+      - name: regcred

@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: benchmark-nodes
+  labels:
+    role: benchmark
+spec:
+  selector:
+    matchLabels:
+      role: benchmark
+  template:
+    metadata:
+      labels:
+        role: benchmark
+    spec:
+      nodeSelector:
+        role: benchmark
+      hostNetwork: true
+      containers:
+      - name: benchmark-container
+        image: sekwonlee/dinomo:kvs
+        imagePullPolicy: Always
+        securityContext:
+          priviledged: true
+        env:
+        - name: SERVER_TYPE
+          value: b
+        - name: ROUTING_IPS
+          value: ROUTING_IPS_DUMMY
+        - name: MGMT_IP
+          value: MGMT_IP_DUMMY
+        - name: SEED_IP
+          value: SEED_IP_DUMMY
+        - name: MON_IPS
+          value: MON_IPS_DUMMY
+        - name: REPO_ORG
+          value: sekwonlee
+        - name: REPO_BRANCH
+          value: master
+      imagePullSecrets:
+      - name: regcred
