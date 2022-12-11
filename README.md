@@ -16,7 +16,11 @@ publisher = {VLDB Endowment},
 volume = {15},
 number = {13},
 issn = {2150-8097},
+url = {https://doi.org/10.14778/3565838.3565854},
+doi = {10.14778/3565838.3565854},
 journal = {Proc. VLDB Endow.},
+pages = {4023 - 4037},
+numpages = {15}
 }
 ```
 
