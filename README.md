@@ -179,3 +179,6 @@ the specified workload pattern.
 
 ## Contact
 Please contact us at `sklee@cs.utexas.edu` or `vijayc@utexas.edu` with any questions.
+
+## Acknowledgments
+Some part of DINOMO's codebase from [Anna](https://github.com/hydro-project/anna).
