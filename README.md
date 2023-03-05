@@ -61,7 +61,7 @@ with a command line interface.
 ### Download source codes
 
 ```
-$ cd ~/; mkdir projects; cd projects; git clone https://github.com/utsaslab/dinomo.git DINOMO; cd dinomo
+$ cd ~/; mkdir projects; cd projects; git clone https://github.com/utsaslab/dinomo.git DINOMO; cd DINOMO
 ```
 
 ### Install dependency
@@ -81,7 +81,7 @@ the user name to access other machines over ssh and install required
 packages remotely.
 
 ```
-$ export DINOMO_HOME=/home/cc/projects/dinomo
+$ export DINOMO_HOME=/home/cc/projects/DINOMO/
 $ export REMOTE_USER_NAME=cc
 ```
 
