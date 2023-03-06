@@ -118,7 +118,7 @@ $ kubectl get nodes
 
 ### Build KVS source codes
 ```
-$ cd ~/projects/dinomo
+$ cd ~/projects/DINOMO
 $ bash scripts/build.sh -bRelease -j8 -g
 ```
 
@@ -142,7 +142,7 @@ Please download this source code to DPM side as well and follow the instructions
 below to run.
 
 ```
-$ cd ~/projects/dinomo
+$ cd ~/projects/DINOMO
 $ bash scripts/dependencies.sh
 $ bash scripts/build.sh -bRelease -j8 -g
 $ ./build/target/kvs/dinomo-storage
