@@ -61,7 +61,7 @@ with a command line interface.
 ### Download source codes
 
 ```
-$ cd ~/; mkdir projects; cd projects; git clone https://github.com/utsaslab/dinomo.git DINOMO; cd dinomo
+$ cd ~/; mkdir projects; cd projects; git clone https://github.com/utsaslab/dinomo.git DINOMO; cd DINOMO
 ```
 
 ### Install dependency
@@ -81,7 +81,7 @@ the user name to access other machines over ssh and install required
 packages remotely.
 
 ```
-$ export DINOMO_HOME=/home/cc/projects/dinomo
+$ export DINOMO_HOME=/home/cc/projects/DINOMO/
 $ export REMOTE_USER_NAME=cc
 ```
 
@@ -118,7 +118,7 @@ $ kubectl get nodes
 
 ### Build KVS source codes
 ```
-$ cd ~/projects/dinomo
+$ cd ~/projects/DINOMO
 $ bash scripts/build.sh -bRelease -j8 -g
 ```
 
@@ -142,7 +142,7 @@ Please download this source code to DPM side as well and follow the instructions
 below to run.
 
 ```
-$ cd ~/projects/dinomo
+$ cd ~/projects/DINOMO
 $ bash scripts/dependencies.sh
 $ bash scripts/build.sh -bRelease -j8 -g
 $ ./build/target/kvs/dinomo-storage
@@ -179,3 +179,6 @@ the specified workload pattern.
 
 ## Contact
 Please contact us at `sklee@cs.utexas.edu` or `vijayc@utexas.edu` with any questions.
+
+## Acknowledgments
+Some part of DINOMO's codebase from [Anna](https://github.com/hydro-project/anna).
