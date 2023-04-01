@@ -28,6 +28,7 @@ PREPARE_IB_CONFIG() {
         sudo bash -c 'echo \"address 10.0.0.$1\" >> /etc/network/interfaces' && \
         sudo bash -c 'echo \"netmask 255.255.255.0\" >> /etc/network/interfaces' && \
         sudo bash -c 'echo \"broadcast 10.0.0.255\" >> /etc/network/interfaces' && \
+        sudo bash -c 'echo \"SUBNET_MANAGER_START=false\" >> /etc/init.d/openibd && \
         sudo /etc/init.d/openibd restart && \
         sudo modprobe -a mlx4_core mlx4_ib mlx4_en mlx5_core mlx5_ib \
         mlx5_fpga_tools ib_umad ib_uverbs ib_ipoib rdma_cm ib_ucm rdma_ucm;"
