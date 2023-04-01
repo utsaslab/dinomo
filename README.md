@@ -59,16 +59,18 @@ with a command line interface.
 -   Ubuntu18.04
 -   Connectx-3 RNIC
 
+## MAKE SURE the master is able to ssh others !!!
+
 ### Download source codes
 
 ```
-$ cd ~/; mkdir projects; cd projects; git clone https://github.com/utsaslab/dinomo.git DINOMO; cd DINOMO
+cd ~/; mkdir projects; cd projects; git clone https://github.com/jasonyxwu/dinomo.git DINOMO; cd DINOMO
 ```
 
 ### Install dependency
 
 ```
-$ bash scripts/dependencies.sh
+bash scripts/dependencies.sh
 ```
 
 ### Configure os environment variables
@@ -83,15 +85,15 @@ to your own environment.
    packages remotely.
 
 ```
-$ export USER_NAME=JasonWu
-$ export DINOMO_HOME=/users/$USER_NAME
-$ export REMOTE_USER_NAME=$USER_NAME
+export USER_NAME=JasonWu
+export DINOMO_HOME=/users/$USER_NAME
+export REMOTE_USER_NAME=$USER_NAME
 ```
 
 ### Configure the number of open file descriptors to be maximum (optional)
 
 ```
-$ ulimit -n $(ulimit -Hn)
+ulimit -n $(ulimit -Hn)
 ```
 
 ### Update configuration files
@@ -99,12 +101,12 @@ $ ulimit -n $(ulimit -Hn)
 Update configuration files by specifying the ip addresses of nodes depending on their type.
 
 ```
-$ vi kubespray/inventory/dinomo_cluster/inventory.ini
-$ vi cluster/dinomo/cluster/kubespray/benchmarkNodes
-$ vi cluster/dinomo/cluster/kubespray/masterNode
-$ vi cluster/dinomo/cluster/kubespray/memoryNodes
-$ vi cluster/dinomo/cluster/kubespray/routingNodes
-$ vi cluster/dinomo/cluster/kubespray/storageNodes
+vi kubespray/inventory/dinomo_cluster/inventory.ini
+vi cluster/dinomo/cluster/kubespray/benchmarkNodes
+vi cluster/dinomo/cluster/kubespray/masterNode
+vi cluster/dinomo/cluster/kubespray/memoryNodes
+vi cluster/dinomo/cluster/kubespray/routingNodes
+vi cluster/dinomo/cluster/kubespray/storageNodes
 ```
 
 ### Create Dinomo Cluster
@@ -113,21 +115,21 @@ $ vi cluster/dinomo/cluster/kubespray/storageNodes
 
 ```
 Usage: python3 -m dinomo.cluster.create_cluster -m <# of KNs> -r <# of RNs> -b <# of ClientNodes>
-$ cd cluster
-$ python3 -m dinomo.cluster.create_cluster -m 1 -r 1 -b 1
+cd cluster
+python3 -m dinomo.cluster.create_cluster -m 1 -r 1 -b 1
 ```
 
 -   Check if the cluster configurations are completed properly. The following command should show the list of the server nodes currently managed by Kubernetes.
 
 ```
-$ kubectl get nodes
+kubectl get nodes
 ```
 
 ### Build KVS source codes
 
 ```
-$ cd ~/projects/DINOMO
-$ bash scripts/build.sh -bRelease -j8 -g
+cd ~/projects/DINOMO
+bash scripts/build.sh -bRelease -j8 -g
 ```
 
 ### Build Docker images for cluster instance pods and upload them to Dockerhub (optional)
@@ -136,7 +138,7 @@ We provide the pre-built container images for Dinomo cluster through [our public
 If you want to use your own images, please refer to the following script.
 
 ```
-$ bash scripts/clean_build_docker.sh
+bash scripts/clean_build_docker.sh
 ```
 
 ## Run cluster
@@ -152,18 +154,18 @@ Please download this source code to DPM side as well and follow the instructions
 below to run.
 
 ```
-$ cd ~/projects/DINOMO
-$ bash scripts/dependencies.sh
-$ bash scripts/build.sh -bRelease -j8 -g
-$ ./build/target/kvs/dinomo-storage
+cd ~/projects/DINOMO
+bash scripts/dependencies.sh
+bash scripts/build.sh -bRelease -j8 -g
+./build/target/kvs/dinomo-storage
 ```
 
 ### Run Dinomo cluster (on the master node)
 
 ```
 Usage: python3 -m dinomo.cluster.run_cluster -m <# of KNs> -r <# of RNs> -b <# of ClientNodes>
-$ cd cluster
-$ python3 -m dinomo.cluster.run_cluster -m 1 -r 1 -b 1
+cd cluster
+python3 -m dinomo.cluster.run_cluster -m 1 -r 1 -b 1
 ```
 
 #### Event trigger
