@@ -41,6 +41,7 @@ done
 cd $DINOMO_HOME/kubespray
 
 sudo pip3 install -r requirements.txt
+sudo pip3 uninstall pyOpenSSL
 
 echo "Creating cluster object..."
 ansible-playbook -i inventory/dinomo_cluster/inventory.ini --become \
