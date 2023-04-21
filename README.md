@@ -145,7 +145,7 @@ below to run.
 $ cd ~/projects/DINOMO
 $ bash scripts/dependencies.sh
 $ bash scripts/build.sh -bRelease -j8 -g
-$ ./build/target/kvs/dinomo-storage
+$ sudo ./build/target/kvs/dinomo-storage
 ```
 
 ### Run Dinomo cluster (on the master node)
